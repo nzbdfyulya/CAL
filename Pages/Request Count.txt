@@ -1,0 +1,59 @@
+OBJECT Page 60006 Request Count
+{
+  OBJECT-PROPERTIES
+  {
+    Date=28.03.22;
+    Time=21:50:34;
+    Modified=Yes;
+    Version List=yulpi;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table60003;
+    PageType=CardPart;
+    OnAfterGetCurrRecord=BEGIN
+                           CustomerRequest.SETRANGE("Customer No.", Rec."Customer No.");
+                           "Customer Request Count" := CustomerRequest.COUNT;
+
+                           AddressRequest.SETRANGE("Customer City",Rec."Customer City");
+                           AddressRequest.SETRANGE("Customer Street",Rec."Customer Street");
+                           AddressRequest.SETRANGE("Customer House No.",Rec."Customer House No.");
+
+                           "Address Request Count" := AddressRequest.COUNT;
+                         END;
+
+  }
+  CONTROLS
+  {
+    { 1101970000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1101970001;1;Group  ;
+                GroupType=Group }
+
+    { 1101970002;2;Field  ;
+                Name=Customer Request Count;
+                CaptionML=ENU=Customer Request Count;
+                SourceExpr="Customer Request Count";
+                Editable=FALSE }
+
+    { 1101970004;2;Field  ;
+                Name=Address Request Count;
+                CaptionML=ENU=Address Request Count;
+                SourceExpr="Address Request Count";
+                Editable=FALSE }
+
+  }
+  CODE
+  {
+    VAR
+      "Customer Request Count"@1101970000 : Integer;
+      "Address Request Count"@1101970001 : Integer;
+      CustomerRequest@1101970002 : Record 60003;
+      AddressRequest@1101970003 : Record 60003;
+
+    BEGIN
+    END.
+  }
+}
+

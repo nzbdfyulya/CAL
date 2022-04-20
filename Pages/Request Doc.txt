@@ -1,0 +1,195 @@
+OBJECT Page 60007 Request Doc
+{
+  OBJECT-PROPERTIES
+  {
+    Date=18.04.22;
+    Time=19:54:51;
+    Modified=Yes;
+    Version List=yulpi;
+  }
+  PROPERTIES
+  {
+    SourceTable=Table60003;
+    PageType=Document;
+    OnInit=BEGIN
+             IF (Status = Status::Created) THEN
+               EditableFields := TRUE;
+           END;
+
+    OnAfterGetRecord=BEGIN
+                       IF (Status = Status::Posted) THEN BEGIN
+                         Enable := FALSE;
+                         EditableFields := FALSE;
+                         END ELSE BEGIN
+                           Enable := TRUE;
+                           EditableFields := TRUE;
+                       END;
+
+                       IF (Status = Status::Canceled) THEN
+                         EnableCancel := FALSE
+                       ELSE
+                         EnableCancel := TRUE;
+                     END;
+
+    ActionList=ACTIONS
+    {
+      { 1101970020;  ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1101970021;1 ;Action    ;
+                      Name=Post Request;
+                      CaptionML=ENU=Post Request;
+                      Promoted=Yes;
+                      Enabled=Enable;
+                      PromotedIsBig=Yes;
+                      Image=PostedOrder;
+                      OnAction=BEGIN
+                                 IF (Status = Status::Posted) THEN
+                                   Enable := FALSE
+                                 ELSE
+                                   Enable := TRUE;
+
+                                 Status := Status::Posted;
+                                 Rec."Posting Date" := WORKDATE;
+                                 MODIFY;
+                               END;
+                                }
+      { 1101970022;1 ;Action    ;
+                      Name=Cancel Request;
+                      CaptionML=ENU=Cancel Request;
+                      Promoted=Yes;
+                      Enabled=EnableCancel;
+                      PromotedIsBig=Yes;
+                      Image=Cancel;
+                      OnAction=BEGIN
+                                 IF (Status = Status::Canceled) THEN
+                                   EnableCancel := FALSE
+                                 ELSE
+                                   EnableCancel := TRUE;
+
+                                 Status := Status::Canceled;
+                                 MODIFY;
+                               END;
+                                }
+      { 1101970023;1 ;Action    ;
+                      Name=Dimensions;
+                      AccessByPermission=TableData 348=R;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=[ENU=Dimensions;
+                                 RUS=Измерения];
+                      ToolTipML=[ENU=View or edit dimensions, such as area, project, or department, that you can assign to sales and purchase documents to distribute costs and analyze transaction history.;
+                                 RUS=Просмотр или изменение измерений, например области, проекта или подразделения, которые можно назначать документам покупки и продажи для распределения себестоимости и анализа истории транзакций.];
+                      ApplicationArea=#Dimensions;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Dimensions;
+                      PromotedCategory=Category4;
+                      OnAction=BEGIN
+                                 IF (Status = Status::Posted) THEN
+                                   PostedShowDimensions
+                                   ELSE BEGIN
+                                     ShowDocDim;
+                                     CurrPage.SAVERECORD;
+                                 END;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1101970000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1101970001;1;Group  ;
+                Name=General;
+                Editable=EditableFields;
+                GroupType=Group }
+
+    { 1101970002;2;Field  ;
+                SourceExpr="No." }
+
+    { 1101970003;2;Field  ;
+                SourceExpr="User ID" }
+
+    { 1101970004;2;Field  ;
+                SourceExpr="Creation Date" }
+
+    { 1101970005;2;Field  ;
+                SourceExpr="Creation Time" }
+
+    { 1101970006;2;Field  ;
+                SourceExpr=Status }
+
+    { 1101970007;2;Field  ;
+                SourceExpr=Priority }
+
+    { 1101970008;2;Field  ;
+                SourceExpr="Request Category" }
+
+    { 1101970009;2;Field  ;
+                SourceExpr="Repairman Code" }
+
+    { 1101970010;2;Field  ;
+                SourceExpr="Repairman Name" }
+
+    { 1101970011;2;Field  ;
+                SourceExpr="Customer No." }
+
+    { 1101970012;2;Field  ;
+                SourceExpr="Customer Full Name" }
+
+    { 1101970013;2;Field  ;
+                SourceExpr="Customer Phone No." }
+
+    { 1101970014;2;Field  ;
+                SourceExpr="Customer City" }
+
+    { 1101970015;2;Field  ;
+                SourceExpr="Customer Street" }
+
+    { 1101970016;2;Field  ;
+                SourceExpr="Customer House No." }
+
+    { 1101970017;2;Field  ;
+                SourceExpr="Customer Room" }
+
+    { 1101970024;2;Field  ;
+                SourceExpr="Posting Date" }
+
+    { 1101970027;1;Group  ;
+                Name=Dimensions;
+                CaptionML=[ENU=Dimensions;
+                           RUS=Измерения];
+                Editable=EditableFields;
+                GroupType=Group }
+
+    { 1101970025;2;Field  ;
+                SourceExpr="Shortcut Dimension 1 Code" }
+
+    { 1101970026;2;Field  ;
+                SourceExpr="Shortcut Dimension 2 Code" }
+
+    { 1101970019;0;Container;
+                Name=Customer/Address Stat. FackBox;
+                CaptionML=[ENU=Customer/ Address Statistics;
+                           RUS=Статистика по клиенту/адресу];
+                ContainerType=FactBoxArea }
+
+    { 1101970018;1;Part   ;
+                SubPageLink=No.=FIELD(No.);
+                PagePartID=Page60006;
+                PartType=Page }
+
+  }
+  CODE
+  {
+    VAR
+      RecPostedRequest@1101970000 : Record 60004;
+      Enable@1101970001 : Boolean;
+      EnableCancel@1101970002 : Boolean;
+      EditableFields@1101970003 : Boolean;
+
+    BEGIN
+    END.
+  }
+}
+

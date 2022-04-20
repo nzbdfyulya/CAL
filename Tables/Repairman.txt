@@ -1,0 +1,156 @@
+OBJECT Table 60002 Repairman
+{
+  OBJECT-PROPERTIES
+  {
+    Date=08.04.22;
+    Time=12:01:14;
+    Modified=Yes;
+    Version List=yulpi;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               IF Code = '' THEN BEGIN
+                 SalesSetup.GET;
+                 SalesSetup.TESTFIELD("Repairman Code");
+                 NoSeriesMgt.InitSeries(SalesSetup."Repairman Code",xRec.Code,0D,Code,"No. Series");
+               END;
+
+               DimMgt.UpdateDefaultDim(
+                 DATABASE::Repairman,Code,
+                 "Global Dimension 1 Code","Global Dimension 2 Code");
+             END;
+
+    OnDelete=BEGIN
+               DimMgt.DeleteDefaultDim(DATABASE::Repairman,Code);
+             END;
+
+    OnRename=BEGIN
+               DimMgt.RenameDefaultDim(DATABASE::Repairman,xRec.Code,Code);
+             END;
+
+  }
+  FIELDS
+  {
+    { 1   ;   ;Code                ;Code20        ;OnValidate=BEGIN
+                                                                IF Code <> xRec.Code THEN BEGIN
+                                                                  SalesSetup.GET;
+                                                                  NoSeriesMgt.TestManual(SalesSetup."Repairman Code");
+                                                                  "No. Series" := '';
+                                                                  NoSeriesMgt.SetSeries(Code);
+                                                                END;
+                                                              END;
+
+                                                   DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Code;
+                                                              RUS=Код];
+                                                   Description=Key }
+    { 2   ;   ;Name                ;Text50        ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Name;
+                                                              RUS=Имя] }
+    { 3   ;   ;E-mail              ;Text80        ;OnValidate=VAR
+                                                                MailManagement@1101970000 : Codeunit 9520;
+                                                                I@1101970001 : Integer;
+                                                              BEGIN
+                                                                IF "E-mail" = '' THEN
+                                                                  ERROR(EmailAddressEmptyErr);
+                                                                MailManagement.CheckValidEmailAddresses("E-mail");
+                                                              END;
+
+                                                   ExtendedDatatype=E-Mail;
+                                                   DataClassification=CustomerContent;
+                                                   CaptionML=[ENU=E-mail;
+                                                              RUS=Эл. почта] }
+    { 4   ;   ;Phone No.           ;Text30        ;OnValidate=VAR
+                                                                i@1101970000 : Integer;
+                                                                Char@1101970001 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Char";
+                                                              BEGIN
+                                                                FOR i := 1 TO STRLEN("Phone No.") DO
+                                                                  IF Char.IsLetter("Phone No."[i]) THEN
+                                                                    FIELDERROR("Phone No.",PhoneNoCannotContainLettersErr);
+
+                                                                "Phone No." := FormatPhoneNumber;
+                                                              END;
+
+                                                   ExtendedDatatype=Phone No.;
+                                                   DataClassification=CustomerContent;
+                                                   CaptionML=[ENU=Phone No.;
+                                                              RUS=Телефон] }
+    { 5   ;   ;Request Category    ;Option        ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Request Category;
+                                                              RUS=Категория заявки];
+                                                   OptionCaptionML=[ENU=" ,Electrician,Sanitary engineering,Gas";
+                                                                    RUS=" ,Электрика,Сантехника,Газ"];
+                                                   OptionString=[ ,Electrician,Sanitary engineering,Gas] }
+    { 6   ;   ;No. Series          ;Code20        ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=No. Series;
+                                                              RUS=Серия номеров] }
+    { 7   ;   ;Global Dimension 1 Code;Code20     ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1));
+                                                   OnValidate=BEGIN
+                                                                ValidateShortcutDimCode(1,"Global Dimension 1 Code");
+                                                              END;
+
+                                                   DataClassification=CustomerContent;
+                                                   CaptionML=[ENU=Global Dimension 1 Code;
+                                                              RUS=Код глобального измерения 1];
+                                                   CaptionClass='1,1,1' }
+    { 8   ;   ;Global Dimension 2 Code;Code20     ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2));
+                                                   OnValidate=BEGIN
+                                                                ValidateShortcutDimCode(2,"Global Dimension 2 Code");
+                                                              END;
+
+                                                   DataClassification=CustomerContent;
+                                                   CaptionML=[ENU=Global Dimension 2 Code;
+                                                              RUS=Код глобального измерения 2];
+                                                   CaptionClass='1,1,2' }
+  }
+  KEYS
+  {
+    {    ;Code                                    ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      EmailAddressEmptyErr@1101970000 : TextConst 'ENU=An email address must be specified.';
+      ConfigAlreadyExistsErr@1101970001 : TextConst 'ENU=The email address has already been added.';
+      PhoneNoCannotContainLettersErr@1101970002 : TextConst 'ENU=Must not contain letters';
+      SalesSetup@1101970003 : Record 311;
+      NoSeriesMgt@1101970004 : Codeunit 396;
+      RequestRec@1101970005 : Record 60003;
+      DimMgt@1101970006 : Codeunit 408;
+
+    LOCAL PROCEDURE FormatPhoneNumber@1101970000() PhoneNumber : Text[30];
+    BEGIN
+      PhoneNumber := DELCHR("Phone No.",'=','+() -/\;:.,^$');
+      EXIT(PhoneNumber)
+    END;
+
+    LOCAL PROCEDURE ValidateShortcutDimCode@1101970001(FieldNumber@1101970000 : Integer;VAR ShortcutDimCode@1101970001 : Code[20]);
+    VAR
+      IsHandled@1101970002 : Boolean;
+    BEGIN
+      IsHandled := FALSE;
+      OnBeforeValidateShortcutDimCode(Rec,FieldNumber,ShortcutDimCode,IsHandled);
+      IF IsHandled THEN
+        EXIT;
+
+      DimMgt.ValidateDimValueCode(FieldNumber,ShortcutDimCode);
+
+      IF NOT ISTEMPORARY THEN BEGIN
+        DimMgt.SaveDefaultDim(DATABASE::Repairman,Code,FieldNumber,ShortcutDimCode);
+        MODIFY;
+      END;
+    END;
+
+    LOCAL PROCEDURE OnBeforeValidateShortcutDimCode@1101970003(Repairman@1101970000 : Record 60002;FieldNumber@1101970001 : Integer;ShortcutDimCode@1101970002 : Code[20];IsHandled@1101970003 : Boolean);
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

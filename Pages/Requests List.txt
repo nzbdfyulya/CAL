@@ -1,0 +1,109 @@
+OBJECT Page 60004 Requests List
+{
+  OBJECT-PROPERTIES
+  {
+    Date=06.04.22;
+    Time=20:21:32;
+    Modified=Yes;
+    Version List=yulpi;
+  }
+  PROPERTIES
+  {
+    Editable=No;
+    SourceTable=Table60003;
+    PageType=List;
+    CardPageID=Request Doc;
+    ActionList=ACTIONS
+    {
+      { 1101970018;  ;ActionContainer;
+                      ActionContainerType=ActionItems }
+      { 1101970019;1 ;Action    ;
+                      Name=Dimensions;
+                      AccessByPermission=TableData 348=R;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=[ENU=Dimensions;
+                                 RUS=Измерения];
+                      ToolTipML=[ENU=View or edit dimensions, such as area, project, or department, that you can assign to sales and purchase documents to distribute costs and analyze transaction history.;
+                                 RUS=Просмотр или изменение измерений, например области, проекта или подразделения, которые можно назначать документам покупки и продажи для распределения себестоимости и анализа истории транзакций.];
+                      ApplicationArea=#Dimensions;
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Dimensions;
+                      PromotedCategory=Category4;
+                      OnAction=BEGIN
+                                 IF (Status = Status::Posted) THEN
+                                   PostedShowDimensions
+                                   ELSE BEGIN
+                                     ShowDocDim
+                                 END;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1101970000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1101970001;1;Group  ;
+                Name=Group;
+                Editable=FALSE;
+                GroupType=Repeater }
+
+    { 1101970002;2;Field  ;
+                SourceExpr="No." }
+
+    { 1101970003;2;Field  ;
+                SourceExpr="User ID" }
+
+    { 1101970004;2;Field  ;
+                SourceExpr="Creation Date" }
+
+    { 1101970005;2;Field  ;
+                SourceExpr="Creation Time" }
+
+    { 1101970006;2;Field  ;
+                SourceExpr=Status }
+
+    { 1101970007;2;Field  ;
+                SourceExpr=Priority }
+
+    { 1101970008;2;Field  ;
+                SourceExpr="Request Category" }
+
+    { 1101970009;2;Field  ;
+                SourceExpr="Repairman Code" }
+
+    { 1101970010;2;Field  ;
+                SourceExpr="Repairman Name" }
+
+    { 1101970011;2;Field  ;
+                SourceExpr="Customer No." }
+
+    { 1101970012;2;Field  ;
+                SourceExpr="Customer Full Name" }
+
+    { 1101970013;2;Field  ;
+                SourceExpr="Customer Phone No." }
+
+    { 1101970014;2;Field  ;
+                SourceExpr="Customer City" }
+
+    { 1101970015;2;Field  ;
+                SourceExpr="Customer Street" }
+
+    { 1101970016;2;Field  ;
+                SourceExpr="Customer House No." }
+
+    { 1101970017;2;Field  ;
+                SourceExpr="Customer Room" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+

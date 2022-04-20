@@ -1,0 +1,275 @@
+OBJECT Table 60003 Request
+{
+  OBJECT-PROPERTIES
+  {
+    Date=08.04.22;
+    Time=12:00:01;
+    Modified=Yes;
+    Version List=yulpi;
+  }
+  PROPERTIES
+  {
+    OnInsert=BEGIN
+               IF "No." = '' THEN BEGIN
+                 SalesSetup.GET;
+                 SalesSetup.TESTFIELD("Request Nos.");
+                 NoSeriesMgt.InitSeries(SalesSetup."Request Nos.",xRec."Customer No.",0D,"No.","No. Series");
+               END;
+
+
+               "User ID" := USERID;
+               "Creation Time" := TIME;
+               "Creation Date" := WORKDATE;
+
+               IF "Repairman Code" = '' THEN
+                 Status := Status::Created
+               ELSE  Status := Status::Assigned;
+             END;
+
+  }
+  FIELDS
+  {
+    { 1   ;   ;No.                 ;Code20        ;OnValidate=BEGIN
+                                                                IF "No." <> xRec."No." THEN BEGIN
+                                                                  SalesSetup.GET;
+                                                                  NoSeriesMgt.TestManual(SalesSetup."Request Nos.");
+                                                                  "No. Series" := '';
+                                                                  NoSeriesMgt.SetSeries("No.");
+                                                                END;
+                                                              END;
+
+                                                   DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=No.;
+                                                              RUS=Номер] }
+    { 2   ;   ;User ID             ;Code20        ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=User ID;
+                                                              RUS=Создано пользователем] }
+    { 3   ;   ;Creation Date       ;Date          ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Creation Date;
+                                                              RUS=Дата создания];
+                                                   Editable=Yes }
+    { 4   ;   ;Creation Time       ;Time          ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Creation Time;
+                                                              RUS=Время создание] }
+    { 5   ;   ;Status              ;Option        ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Status;
+                                                              RUS=Статус];
+                                                   OptionCaptionML=[ENU=Created,Assigned,Canceled,Posted;
+                                                                    RUS=Создана,Назначена,Отменена,Выполнена];
+                                                   OptionString=Created,Assigned,Canceled,Posted;
+                                                   Editable=No }
+    { 6   ;   ;Priority            ;Option        ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Priority;
+                                                              RUS=Приоритет];
+                                                   OptionCaptionML=[ENU=Low,High,Emergency;
+                                                                    RUS=Низкий,Высокий,Аварийный];
+                                                   OptionString=Low,High,Emergency }
+    { 7   ;   ;Request Category    ;Option        ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Request Category;
+                                                              RUS=Категория заявки];
+                                                   OptionCaptionML=[ENU=" ,Electrician,Sanitary engineering,Gas";
+                                                                    RUS=" ,Электрика,Сантехника,Газ"];
+                                                   OptionString=[ ,Electrician,Sanitary engineering,Gas] }
+    { 8   ;   ;Repairman Code      ;Code20        ;TableRelation=Repairman.Code WHERE (Request Category=FIELD(Request Category));
+                                                   OnValidate=BEGIN
+                                                                IF "Repairman Code" = '' THEN
+                                                                  Status := Status::Created
+                                                                ELSE  Status := Status::Assigned;
+
+                                                                CreateDim(DATABASE::Repairman, "Repairman Code",
+                                                                          DATABASE::Customer, "Customer No.");
+                                                              END;
+
+                                                   ValidateTableRelation=Yes;
+                                                   DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Repairman Code;
+                                                              RUS=Код мастера] }
+    { 9   ;   ;Repairman Name      ;Text50        ;FieldClass=FlowField;
+                                                   CalcFormula=Lookup(Repairman.Name WHERE (Code=FIELD(Repairman Code)));
+                                                   CaptionML=[ENU=Repairman Name;
+                                                              RUS=Имя мастера];
+                                                   Editable=No }
+    { 10  ;   ;Customer No.        ;Code20        ;TableRelation=Customer;
+                                                   OnValidate=BEGIN
+                                                                IF CustomerRec.GET("Customer No.") THEN BEGIN
+                                                                  "Customer Full Name" := CustomerRec."Full Name";
+                                                                  "Customer City" := CustomerRec.City;
+                                                                  "Customer Phone No." := CustomerRec."Phone No.";
+                                                                  MODIFY;
+                                                                END;
+
+                                                                CreateDim(DATABASE::Repairman, "Repairman Code",
+                                                                          DATABASE::Customer, "Customer No.");
+                                                              END;
+
+                                                   ValidateTableRelation=No;
+                                                   DataClassification=CustomerContent;
+                                                   CaptionML=[ENU=Customer No.;
+                                                              RUS=Код клиента] }
+    { 11  ;   ;Customer Full Name  ;Text50        ;TableRelation=Customer.Name WHERE (No.=FIELD(Customer No.));
+                                                   ValidateTableRelation=No;
+                                                   DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Customer Full Name;
+                                                              RUS=ФИО клиента] }
+    { 12  ;   ;Customer Phone No.  ;Code20        ;TableRelation=Customer."Phone No." WHERE (No.=FIELD(Customer No.));
+                                                   OnValidate=VAR
+                                                                i@1101970000 : Integer;
+                                                                Char@1101970001 : DotNet "'mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089'.System.Char";
+                                                              BEGIN
+                                                                FOR i := 1 TO STRLEN("Customer Phone No.") DO
+                                                                  IF Char.IsLetter("Customer Phone No."[i]) THEN
+                                                                    FIELDERROR("Customer Phone No.",PhoneNoCannotContainLettersErr);
+
+                                                                "Customer Phone No." := FormatPhoneNumber;
+                                                              END;
+
+                                                   ValidateTableRelation=No;
+                                                   DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Customer Phone No.;
+                                                              RUS=Телефон клиента] }
+    { 13  ;   ;Customer City       ;Text50        ;TableRelation=Customer.City WHERE (No.=FIELD(Customer No.));
+                                                   ValidateTableRelation=No;
+                                                   DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Customer City;
+                                                              RUS=Город] }
+    { 14  ;   ;Customer Street     ;Text100       ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Customer Street;
+                                                              RUS=Улица] }
+    { 15  ;   ;Customer House No.  ;Code10        ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Customer House No.;
+                                                              RUS=Номер дома] }
+    { 16  ;   ;Customer Room       ;Code10        ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Customer Room;
+                                                              RUS=Номер квартиры] }
+    { 17  ;   ;Posting Date        ;Date          ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Posting Date;
+                                                              RUS=Дата закрытия заявки] }
+    { 18  ;   ;No. Series          ;Code20        ;DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=No. Series;
+                                                              RUS=Серия номеров] }
+    { 19  ;   ;Shortcut Dimension 1 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(1),
+                                                                                               Blocked=CONST(No));
+                                                   OnValidate=BEGIN
+                                                                ValidateShortcutDimCode(1,"Shortcut Dimension 1 Code");
+                                                              END;
+
+                                                   DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Shortcut Dimension 1 Code;
+                                                              RUS=Код ярлыка измерения 1];
+                                                   CaptionClass='1,2,1' }
+    { 20  ;   ;Shortcut Dimension 2 Code;Code20   ;TableRelation="Dimension Value".Code WHERE (Global Dimension No.=CONST(2),
+                                                                                               Blocked=CONST(No));
+                                                   OnValidate=BEGIN
+                                                                ValidateShortcutDimCode(2,"Shortcut Dimension 2 Code");
+                                                              END;
+
+                                                   DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Shortcut Dimension 2 Code;
+                                                              RUS=Код ярлыка измерения 2];
+                                                   CaptionClass='1,2,2' }
+    { 480 ;   ;Dimension Set ID    ;Integer       ;TableRelation="Dimension Set Entry";
+                                                   OnValidate=BEGIN
+                                                                DimMgt.UpdateGlobalDimFromDimSetID("Dimension Set ID","Shortcut Dimension 1 Code","Shortcut Dimension 2 Code");
+                                                              END;
+
+                                                   OnLookup=BEGIN
+                                                              ShowDocDim;
+                                                            END;
+
+                                                   DataClassification=ToBeClassified;
+                                                   CaptionML=[ENU=Dimension Set ID;
+                                                              RUS=Код набора измерений];
+                                                   Editable=No }
+  }
+  KEYS
+  {
+    {    ;No.                                     ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+    VAR
+      RepairmanRec@1101970000 : Record 60003;
+      PhoneNoCannotContainLettersErr@1101970001 : TextConst 'ENU=Must not contain letters';
+      i@1101970002 : Integer;
+      CustomerRec@1101970003 : Record 18;
+      SalesSetup@1101970004 : Record 311;
+      NoSeriesMgt@1101970005 : Codeunit 396;
+      DimMgt@1101970006 : Codeunit 408;
+
+    LOCAL PROCEDURE FormatPhoneNumber@1101970003() PhoneNumber : Text[30];
+    BEGIN
+      PhoneNumber := DELCHR("Customer Phone No.",'=','+() ');
+      EXIT(PhoneNumber)
+    END;
+
+    LOCAL PROCEDURE CheckRepairmanCode@1101970001() CheckTrue : Boolean;
+    BEGIN
+    END;
+
+    LOCAL PROCEDURE ValidateShortcutDimCode@1101970006(FieldNumber@1101970000 : Integer;VAR ShortcutDimCode@1101970001 : Code[20]);
+    VAR
+      OldDimSetID@1101970002 : Integer;
+    BEGIN
+      OldDimSetID := "Dimension Set ID";
+      DimMgt.ValidateShortcutDimValues(FieldNumber,ShortcutDimCode,"Dimension Set ID");
+      IF "No." <> '' THEN
+        MODIFY;
+
+      IF OldDimSetID <> "Dimension Set ID" THEN BEGIN
+          MODIFY;
+      END;
+    END;
+
+    [External]
+    PROCEDURE ShowDocDim@1101970005();
+    VAR
+      OldDimSetID@1101970000 : Integer;
+    BEGIN
+      OldDimSetID := "Dimension Set ID";
+      "Dimension Set ID" :=
+        DimMgt.EditDimensionSet2(
+          "Dimension Set ID","No.",
+          "Shortcut Dimension 1 Code","Shortcut Dimension 2 Code");
+      IF OldDimSetID <> "Dimension Set ID" THEN BEGIN
+        MODIFY;
+      END;
+    END;
+
+    LOCAL PROCEDURE CreateDim@1101970004(Type1@1101970000 : Integer;No1@1101970001 : Code[20];Type2@1101970007 : Integer;No2@1101970006 : Code[20]);
+    VAR
+      SourceCodeSetup@1101970002 : Record 242;
+      TableID@1101970003 : ARRAY [2] OF Integer;
+      No@1101970004 : ARRAY [2] OF Code[20];
+      OldDimSetID@1101970005 : Integer;
+    BEGIN
+       SourceCodeSetup.GET;
+       TableID[1] := Type1;
+       No[1] := No1;
+       TableID[2] := Type2;
+       No[2] := No2;
+
+       "Shortcut Dimension 1 Code" := '';
+       "Shortcut Dimension 2 Code" := '';
+       OldDimSetID := "Dimension Set ID";
+       "Dimension Set ID" :=
+        DimMgt.GetRecDefaultDimID(
+          Rec,CurrFieldNo,TableID,No,SourceCodeSetup.Sales,"Shortcut Dimension 1 Code","Shortcut Dimension 2 Code",0,0);
+
+       IF (OldDimSetID <> "Dimension Set ID") THEN
+        MODIFY;
+    END;
+
+    [External]
+    PROCEDURE PostedShowDimensions@1101970000();
+    BEGIN
+      DimMgt.ShowDimensionSet("Dimension Set ID",STRSUBSTNO('%1 %2',TABLECAPTION,"No."));
+    END;
+
+    BEGIN
+    END.
+  }
+}
+

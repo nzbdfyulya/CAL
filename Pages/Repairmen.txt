@@ -1,0 +1,108 @@
+OBJECT Page 60003 Repairmen
+{
+  OBJECT-PROPERTIES
+  {
+    Date=08.04.22;
+    Time=13:41:49;
+    Modified=Yes;
+    Version List=yulpi;
+  }
+  PROPERTIES
+  {
+    CaptionML=[ENU=Repairmen;
+               RUS=Мастера];
+    SourceTable=Table60002;
+    PageType=List;
+    ActionList=ACTIONS
+    {
+      { 1101970007;  ;ActionContainer;
+                      ActionContainerType=RelatedInformation }
+      { 1101970008;1 ;ActionGroup;
+                      CaptionML=ENU=Dimensions }
+      { 1101970009;2 ;Action    ;
+                      Name=DimensionsSingle;
+                      ShortCutKey=Shift+Ctrl+D;
+                      CaptionML=[ENU=Dimensions-Single;
+                                 RUS=одно];
+                      ToolTipML=[ENU=View or edit the single set of dimensions that are set up for the selected record.;
+                                 RUS=Просмотр или изменение отдельного набора измерений, настроенных для выбранной записи.];
+                      ApplicationArea=#Dimensions;
+                      RunObject=Page 540;
+                      RunPageLink=Table ID=CONST(60002),
+                                  No.=FIELD(Code);
+                      Promoted=Yes;
+                      PromotedIsBig=Yes;
+                      Image=Dimensions;
+                      PromotedCategory=Category4 }
+      { 1101970010;2 ;Action    ;
+                      Name=DimensionsMultiple;
+                      AccessByPermission=TableData 348=R;
+                      CaptionML=[ENU=Dimensions-&Multiple;
+                                 RUS=&несколько];
+                      ToolTipML=[ENU=View or edit dimensions for a group of records. You can assign dimension codes to transactions to distribute costs and analyze historical information.;
+                                 RUS=Просмотр или изменение измерений для группы записей. Коды измерений можно назначать транзакциям для распределения затрат и анализа исторических данных.];
+                      ApplicationArea=#Dimensions;
+                      Promoted=Yes;
+                      Image=DimensionSets;
+                      PromotedCategory=Category4;
+                      OnAction=VAR
+                                 Repairman@1101970000 : Record 60002;
+                                 DefaultDimMultiple@1101970001 : Page 542;
+                               BEGIN
+                                 CurrPage.SETSELECTIONFILTER(Repairman);
+                                 DefaultDimMultiple.SetMultiRecord(Repairman,FIELDNO(Code));
+                                 DefaultDimMultiple.RUNMODAL;
+                               END;
+                                }
+    }
+  }
+  CONTROLS
+  {
+    { 1101970000;0;Container;
+                ContainerType=ContentArea }
+
+    { 1101970001;1;Group  ;
+                Name=Group;
+                CaptionML=[ENU=Repairmen;
+                           RUS=Мастера];
+                GroupType=Repeater }
+
+    { 1101970002;2;Field  ;
+                Name=Code;
+                CaptionML=[ENU=Code;
+                           RUS=Код];
+                SourceExpr=Code }
+
+    { 1101970003;2;Field  ;
+                Name=Name;
+                CaptionML=[ENU=Name;
+                           RUS=Имя];
+                SourceExpr=Name }
+
+    { 1101970004;2;Field  ;
+                Name=E-mail;
+                CaptionML=[ENU=E-mail;
+                           RUS=Эл. почта];
+                SourceExpr="E-mail" }
+
+    { 1101970005;2;Field  ;
+                Name=Phone No.;
+                CaptionML=[ENU=Phone No.;
+                           RUS=Телефон];
+                SourceExpr="Phone No." }
+
+    { 1101970006;2;Field  ;
+                Name=Request Category;
+                CaptionML=[ENU=Request Category;
+                           RUS=Категория заявки];
+                SourceExpr="Request Category" }
+
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
